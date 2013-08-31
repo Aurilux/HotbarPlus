@@ -1,0 +1,21 @@
+[
+{
+	"modid": "mod_HBP",
+	"name": "HotbarPlus",
+	"description": "Adds a little extended functionality to the hotbar to easily switch between frequently used items.",
+	"version": "1.0.0",
+	"mcversion": "1.6.2",
+	"url": "",
+	"updateUrl": "",
+	"authorList": [
+		"Aurilux"
+	],
+	"credits": "By Aurilux",
+	"logoFile": "",
+	"screenshots": [
+	],
+	"parent": "",
+	"dependencies": [
+	]
+}
+]
