@@ -16,12 +16,15 @@ import static net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType
 import static net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType.TEXT;
 
 import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiPlayerInfo;
@@ -37,6 +40,7 @@ import net.minecraft.entity.ai.attributes.AttributeInstance;
 import net.minecraft.entity.boss.BossStatus;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.packet.Packet250CustomPayload;
 import net.minecraft.potion.Potion;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
@@ -61,6 +65,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.relauncher.Side;
 
 public class HBPGui extends GuiIngameForge {
 	
@@ -145,21 +150,69 @@ public class HBPGui extends GuiIngameForge {
             GL11.glDisable(GL12.GL_RESCALE_NORMAL);
             GL11.glEnable(GL11.GL_BLEND);
             
+            //TODO optimize the following
             //responds to the specified key presses and then resets the toggle to prevent repeating
             if (Keyboard.isKeyDown(Keyboard.KEY_V)) {
-            	ItemStack toSwitch = inv.mainInventory[selection1]; //stores the selected item
-            	ItemStack hotbarItem = inv.mainInventory[inv.currentItem]; //stores the item from the hotbar
-            	
-            	inv.mainInventory[inv.currentItem] = toSwitch; //move the item from the inventory to the hotbar
-            	inv.mainInventory[selection1] = hotbarItem; //move the hotbar item to the inventory
+                
+                ByteArrayOutputStream bos = new ByteArrayOutputStream(8);
+                DataOutputStream outputStream = new DataOutputStream(bos);
+                try {
+                        outputStream.writeInt(selection1);
+                        outputStream.writeInt(inv.currentItem);
+                }
+                catch (Exception ex) {
+                        ex.printStackTrace();
+                }
+               
+                Packet250CustomPayload packet = new Packet250CustomPayload();
+                packet.channel = "HBP";
+                packet.data = bos.toByteArray();
+                packet.length = bos.size();
+               
+                Side side = FMLCommonHandler.instance().getEffectiveSide();
+                if (side == Side.SERVER) {
+                        // We are on the server side.
+                        //do nothing
+                }
+                else if (side == Side.CLIENT) {
+                        // We are on the client side.
+                        EntityClientPlayerMP player = (EntityClientPlayerMP) mc.thePlayer;
+                        player.sendQueue.addToSendQueue(packet);
+                }
+                else {
+                        // We are on the Bukkit server.
+                }
             	toggle();
             }
             else if (Keyboard.isKeyDown(Keyboard.KEY_B)) {
-            	ItemStack toSwitch = inv.mainInventory[selection2]; //stores the selected item
-            	ItemStack hotbarItem = inv.mainInventory[inv.currentItem]; //stores the item from the hotbar
-            	
-            	inv.mainInventory[inv.currentItem] = toSwitch; //move the item from the inventory to the hotbar
-            	inv.mainInventory[selection2] = hotbarItem; //move the hotbar item to the inventory
+                ByteArrayOutputStream bos = new ByteArrayOutputStream(8);
+                DataOutputStream outputStream = new DataOutputStream(bos);
+                try {
+                        outputStream.writeInt(selection2);
+                        outputStream.writeInt(inv.currentItem);
+                }
+                catch (Exception ex) {
+                        ex.printStackTrace();
+                }
+               
+                Packet250CustomPayload packet = new Packet250CustomPayload();
+                packet.channel = "HBP";
+                packet.data = bos.toByteArray();
+                packet.length = bos.size();
+               
+                Side side = FMLCommonHandler.instance().getEffectiveSide();
+                if (side == Side.SERVER) {
+                        // We are on the server side.
+                        //do nothing
+                }
+                else if (side == Side.CLIENT) {
+                        // We are on the client side.
+                        EntityClientPlayerMP player = (EntityClientPlayerMP) mc.thePlayer;
+                        player.sendQueue.addToSendQueue(packet);
+                }
+                else {
+                        // We are on the Bukkit server.
+                }
             	toggle();
             }
         }
