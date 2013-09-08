@@ -24,7 +24,6 @@ import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiPlayerInfo;
@@ -60,12 +59,13 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.MinecraftForge;
 
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
+import com.aurilux.hbp.handlers.HBPKeyHandler;
+
 import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.common.network.PacketDispatcher;
 
 public class HBPGui extends GuiIngameForge {
 	
@@ -78,6 +78,7 @@ public class HBPGui extends GuiIngameForge {
 	private boolean toggle;
 	/*stores the player's inventory*/
 	private InventoryPlayer inv;
+	private float lastTick;
 	
 	//copied private variables
     private ScaledResolution res = null;
@@ -90,6 +91,7 @@ public class HBPGui extends GuiIngameForge {
 	public HBPGui(Minecraft mc) {
 		super(mc);
 		toggle = false;
+		lastTick = 0;
 	}
 	
 	public void toggle() {
@@ -150,9 +152,13 @@ public class HBPGui extends GuiIngameForge {
             GL11.glDisable(GL12.GL_RESCALE_NORMAL);
             GL11.glEnable(GL11.GL_BLEND);
             
+            //This if statement is just to ensure 'lastTick' doesn't get to obscenely high numbers if the player has the extended
+            //hotbar open for long periods
+            if (lastTick < 5) {
+            	lastTick += partialTicks;
+            }
             //TODO optimize the following
-            //responds to the specified key presses and then resets the toggle to prevent repeating
-            if (Keyboard.isKeyDown(Keyboard.KEY_V)) {
+            if (HBPKeyHandler.firstOption.isPressed() && lastTick >= 5) {
                 
                 ByteArrayOutputStream bos = new ByteArrayOutputStream(8);
                 DataOutputStream outputStream = new DataOutputStream(bos);
@@ -168,23 +174,10 @@ public class HBPGui extends GuiIngameForge {
                 packet.channel = "HBP";
                 packet.data = bos.toByteArray();
                 packet.length = bos.size();
-               
-                Side side = FMLCommonHandler.instance().getEffectiveSide();
-                if (side == Side.SERVER) {
-                        // We are on the server side.
-                        //do nothing
-                }
-                else if (side == Side.CLIENT) {
-                        // We are on the client side.
-                        EntityClientPlayerMP player = (EntityClientPlayerMP) mc.thePlayer;
-                        player.sendQueue.addToSendQueue(packet);
-                }
-                else {
-                        // We are on the Bukkit server.
-                }
-            	toggle();
+                PacketDispatcher.sendPacketToServer(packet);
+                lastTick = 0;
             }
-            else if (Keyboard.isKeyDown(Keyboard.KEY_B)) {
+            else if (HBPKeyHandler.secondOption.isPressed() && lastTick >= 5) {
                 ByteArrayOutputStream bos = new ByteArrayOutputStream(8);
                 DataOutputStream outputStream = new DataOutputStream(bos);
                 try {
@@ -199,21 +192,8 @@ public class HBPGui extends GuiIngameForge {
                 packet.channel = "HBP";
                 packet.data = bos.toByteArray();
                 packet.length = bos.size();
-               
-                Side side = FMLCommonHandler.instance().getEffectiveSide();
-                if (side == Side.SERVER) {
-                        // We are on the server side.
-                        //do nothing
-                }
-                else if (side == Side.CLIENT) {
-                        // We are on the client side.
-                        EntityClientPlayerMP player = (EntityClientPlayerMP) mc.thePlayer;
-                        player.sendQueue.addToSendQueue(packet);
-                }
-                else {
-                        // We are on the Bukkit server.
-                }
-            	toggle();
+                PacketDispatcher.sendPacketToServer(packet);
+                lastTick = 0;
             }
         }
         else {
